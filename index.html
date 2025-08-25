@@ -3,641 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>arcLedR2</title>
+    <title>Code Saver & Runner</title>
     <style>
-        :root{
-            /* 調整用（サイズとオフセット） */
-            --settings-btn-size: 40px;
-            --settings-btn-left-offset: -97px;
-            --settings-btn-top-offset: 15px;
-        }
-
-        body {
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-touch-callout: none;
-            touch-action: manipulation;
-            margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #1e1e1e, #2a2a2a);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            font-family: 'Arial', sans-serif;
-            overflow: hidden;
-            flex-direction: column;
-            color: #fff;
-            text-align: center;
-        }
-
-        img { -webkit-user-drag: none; user-drag: none; }
-
-        .controls-panel {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            width: 250px;
-            background: rgba(0, 0, 0, 0.95);
-            border-radius: 10px;
-            padding: 15px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 1000;
-            flex-direction: column;
-            gap: 12px;
-            font-size: 11px;
-            max-height: calc(100vh - 40px);
-            overflow-y: auto;
-            display: none;
-        }
-        .controls-panel.show { display: flex; }
-
-        /* 歯車画像が収まる円形ボタン（置換） */
-        .settings-button {
-            position: absolute;
-            top: calc(50% + var(--settings-btn-top-offset));
-            left: calc(50% + var(--settings-btn-left-offset));
-            transform: translate(-50%, -50%);
-            width: var(--settings-btn-size);
-            height: var(--settings-btn-size);
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            color: #fff;
-            font-size: 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1001;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(5px);
-            padding: 0;
-        }
-        .settings-button:hover {
-            background: rgba(0, 0, 0, 0.9);
-            border-color: rgba(255, 255, 255, 0.4);
-            transform: translate(-50%, -50%) scale(1.1);
-        }
-        .settings-button:active {
-            transform: translate(-50%, -50%) scale(0.9);
-        }
-        .settings-button:focus-visible{
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(0,255,136,0.35);
-        }
-        .settings-button .gear-icon{
-            width: 70%;
-            height: 70%;
-            object-fit: contain;
-            pointer-events: none; /* クリックはボタンに集約 */
-            display: block;
-        }
-
-        .control-group { display: flex; flex-direction: column; gap: 5px; }
-        .control-group h4 {
-            margin: 0;
-            padding: 0;
-            font-size: 13px;
-            color: #00aa66;
-            text-align: left;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
-            padding-bottom: 5px;
-            margin-bottom: 5px;
-        }
-        .control-group label { color: #ccc; font-weight: bold; font-size: 11px; }
-
-        .control-group input[type="range"]{
-            width: 100%; height: 4px; border-radius: 2px; background: #333; outline: none; -webkit-appearance: none;
-        }
-        .control-group input[type="range"]::-webkit-slider-thumb{
-            appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #00aa66; cursor: pointer; border: 2px solid #fff;
-        }
-        .control-group input[type="range"]::-moz-range-thumb{
-            width: 16px; height: 16px; border-radius: 50%; background: #00aa66; cursor: pointer; border: 2px solid #fff;
-        }
-
-        .control-value { color: #00aa66; font-weight: bold; font-size: 11px; display: flex; justify-content: space-between; }
-        .control-value .default { color: #888; font-weight: normal; }
-
-        .reset-button {
-            background: #444; color: #fff; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer;
-            transition: background 0.3s ease; font-size: 11px; margin-bottom: 15px;
-        }
-        .reset-button:hover { background: #555; }
-
-        .device-container {
-            position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            transition: transform 0.5s ease;
-            width: 400px; height: 400px;
-            transform-origin: center center;
-        }
-        .device {
-            position: relative;
-            width: 300px; height: 300px; margin: 50px;
-            background: radial-gradient(circle, #1a1a1a, #000);
-            border-radius: 50%;
-            box-shadow: 
-                0 0 30px rgba(0,0,0,0.8),
-                inset 0 0 20px rgba(255,255,255,0.1),
-                0 10px 30px rgba(0,0,0,0.6);
-            border: 3px solid #333;
-        }
-
-        .led { position: absolute; width: 16px; height: 25px; border-radius: 3px; background: transparent; border: none; transition: all 0.15s ease; transform-origin: center center; opacity: 0; }
-        .led::before { content: ''; position: absolute; top: -5px; left: -2px; width: 20px; height: 35px; border-radius: 4px; background: transparent; transition: all 0.3s ease; opacity: 0; }
-        .led::after  { content: ''; position: absolute; top: 2px; left: 1px; width: 14px; height: 21px; border-radius: 2px; background: transparent; transition: all 0.3s ease; opacity: 0; }
-
-        .led.active {
-            background: currentColor; border: 1px solid currentColor; opacity: 1;
-            box-shadow: 0 0 8px currentColor, 0 0 16px currentColor, inset 0 0 4px rgba(255,255,255,0.4);
-            transition: all 0.1s ease;
-        }
-        .led.active::before {
-            background: currentColor; opacity: 0.2;
-            box-shadow: 0 0 12px currentColor, 0 0 20px currentColor;
-            transition: all 0.1s ease;
-        }
-        .led.active::after {
-            background: currentColor; opacity: 1;
-            box-shadow: 0 0 6px currentColor, inset 0 0 3px rgba(255,255,255,0.6);
-            transition: all 0.1s ease;
-        }
-
-        .led.dim { background: #222; border: 1px solid #333; opacity: 0.15; box-shadow: none; transition: all 0.1s ease; }
-        .led.dim::before { background: #222; opacity: 0.1; box-shadow: none; }
-        .led.dim::after  { background: #222; opacity: 0.1; box-shadow: none; }
-
-        .led.red    { color: #ff4444; }
-        .led.orange { color: #ff8800; }
-        .led.yellow { color: #ffdd00; }
-        .led.green  { color: #44ff44; }
-        .led.blue   { color: #4488ff; }
-        .led.purple { color: #aa44ff; }
-
-        .start-button {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
-            width: 70px; height: 70px; border-radius: 50%;
-            background: linear-gradient(145deg, #2a2a2a, #111);
-            border: 4px solid #444; color: #fff; font-size: 10px; font-weight: bold;
-            cursor: pointer; display: flex; align-items: center; justify-content: center; text-align: center;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.7), inset 0 3px 8px rgba(255,255,255,0.15), 0 0 0 2px rgba(0,255,136,0.2);
-            user-select: none; backdrop-filter: blur(5px);
-        }
-        .start-button:hover {
-            background: linear-gradient(145deg, #333, #1a1a1a);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.8), inset 0 3px 8px rgba(255,255,255,0.2), 0 0 0 2px rgba(0,255,136,0.4);
-            transform: translate(-50%,-50%) translateX(3px);
-        }
-        .start-button:active { transform: translate(-50%,-50%) scale(0.95); }
-        .start-button:disabled { cursor: not-allowed; opacity: 0.6; }
-
-        .inner-glow {
-            position: absolute; top: 50%; left: 50%; width: 140px; height: 140px; transform: translate(-50%, -50%);
-            border-radius: 50%;
-            background: radial-gradient(circle, transparent 60%, rgba(0,0,0,0.3) 100%);
-            pointer-events: none; transition: all 0.5s ease;
-        }
-        .device.has-active-leds .inner-glow { background: radial-gradient(circle, rgba(68, 255, 68, 0.1) 0%, transparent 70%); }
-
-        #rotation-button {
-            position: fixed; bottom: 25px; right: 25px; width: 20px; height: 20px;
-            background: rgba(255, 255, 255, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: 50%; cursor: pointer; transition: all 0.2s ease; z-index: 1000; backdrop-filter: blur(5px);
-        }
-        #rotation-button:hover { background: rgba(255, 255, 255, 0.5); border-color: rgba(255, 255, 255, 0.6); transform: scale(1.2); }
-        #rotation-button:active { transform: scale(0.9); background: rgba(255, 255, 255, 0.7); }
-
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
-        .led.blinking { animation: blink 0.6s ease-in-out infinite; }
-
-        .mode-controls, .mode-labels, .press-text, .progress-ring, .progress-ring-bg, .progress-ring-fill, .mode-switch, #currentMode { display: none; }
-
-        @media (max-width: 768px) {
-            .controls-panel { width: 220px; top: 10px; left: 10px; padding: 10px; gap: 10px; }
-        }
+        body { font-family: sans-serif; padding: 20px; background-color: #f0f0f0; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; }
+        textarea { width: 100%; height: 250px; border: 1px solid #ccc; border-radius: 4px; padding: 10px; font-family: monospace; }
+        .controls { display: flex; justify-content: space-around; margin-top: 10px; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; border: none; border-radius: 5px; color: white; }
+        #saveBtn1, #saveBtn2, #saveBtn3 { background-color: #4CAF50; }
+        #loadBtn1, #loadBtn2, #loadBtn3 { background-color: #2196F3; }
+        #runBtn { background-color: #f44336; }
+        #outputFrame { width: 100%; height: 300px; border: 1px solid #ccc; margin-top: 20px; }
     </style>
 </head>
 <body>
-    <div class="device-container" style="transform: translate(-50%, -50%) rotate(277.5deg);">
-        <div class="device" id="device">
-            <div class="inner-glow"></div>
-            <button class="start-button" id="startButton">●</button>
-        </div>
 
-        <!-- ⚙️ 絵文字 → 歯車画像の円形ボタンに置換 -->
-        <button class="settings-button" type="button" onclick="toggleSettings(event)" aria-label="設定" title="設定">
-            <img src="IMG_5100.PNG" alt="" class="gear-icon" decoding="async" fetchpriority="low" draggable="false">
-        </button>
+<div class="container">
+    <h1>HTML Code Runner</h1>
+    <p>ここにHTMLコードを入力してください。保存・呼び出しが可能です。</p>
+    <textarea id="codeEditor"></textarea>
+
+    <div class="controls">
+        <div>
+            <button id="saveBtn1">スロット1に保存</button>
+            <button id="loadBtn1">スロット1を呼び出し</button>
+        </div>
+        <div>
+            <button id="saveBtn2">スロット2に保存</button>
+            <button id="loadBtn2">スロット2を呼び出し</button>
+        </div>
+        <div>
+            <button id="saveBtn3">スロット3に保存</button>
+            <button id="loadBtn3">スロット3を呼び出し</button>
+        </div>
+        <button id="runBtn">実行</button>
     </div>
 
-    <div class="controls-panel" id="controlsPanel">
-        <button class="reset-button" onclick="window.ledSequence.resetToDefault()">設定をリセット</button>
+    <h3>出力プレビュー</h3>
+    <iframe id="outputFrame"></iframe>
+</div>
 
-        <div class="control-group">
-            <h4>アニメーション設定</h4>
-            <label for="pressTime">長押しすべき時間 (秒)</label>
-            <input type="range" id="pressTime" min="0.5" max="7" step="0.5" value="5" data-default-value="5">
-            <span class="control-value" id="pressTimeValue">
-                <span class="current-value">5秒</span>
-                <span class="default">(デフォルト: 5秒)</span>
-            </span>
-        </div>
+<script>
+    const codeEditor = document.getElementById('codeEditor');
+    const outputFrame = document.getElementById('outputFrame');
+    const runBtn = document.getElementById('runBtn');
 
-        <div class="control-group">
-            <label for="pressRotations">長押し中の回転回数</label>
-            <input type="range" id="pressRotations" min="0" max="10" step="1" value="2" data-default-value="2">
-            <span class="control-value" id="pressRotationsValue">
-                <span class="current-value">2回転</span>
-                <span class="default">(デフォルト: 2回転)</span>
-            </span>
-        </div>
+    // ボタンのイベントリスナーを設定
+    document.getElementById('saveBtn1').addEventListener('click', () => saveCode(1));
+    document.getElementById('loadBtn1').addEventListener('click', () => loadCode(1));
+    document.getElementById('saveBtn2').addEventListener('click', () => saveCode(2));
+    document.getElementById('loadBtn2').addEventListener('click', () => loadCode(2));
+    document.getElementById('saveBtn3').addEventListener('click', () => saveCode(3));
+    document.getElementById('loadBtn3').addEventListener('click', () => loadCode(3));
 
-        <div class="control-group">
-            <label for="firstSpinDuration">前半のアニメ時間 (秒)</label>
-            <input type="range" id="firstSpinDuration" min="0.5" max="7" step="0.5" value="5" data-default-value="5">
-            <span class="control-value" id="firstSpinDurationValue">
-                <span class="current-value">5秒</span>
-                <span class="default">(デフォルト: 5秒)</span>
-            </span>
-        </div>
+    // 実行ボタン
+    runBtn.addEventListener('click', runCode);
 
-        <div class="control-group">
-            <label for="firstSpinRotations">前半の回転回数</label>
-            <input type="range" id="firstSpinRotations" min="0" max="10" step="1" value="2" data-default-value="2">
-            <span class="control-value" id="firstSpinRotationsValue">
-                <span class="current-value">2回転</span>
-                <span class="default">(デフォルト: 2回転)</span>
-            </span>
-        </div>
+    // コードを実行する関数
+    function runCode() {
+        const code = codeEditor.value;
+        const frameDoc = outputFrame.contentWindow.document;
+        frameDoc.open();
+        frameDoc.write(code);
+        frameDoc.close();
+    }
 
-        <div class="control-group">
-            <label for="finalSpinDuration">後半のアニメ時間 (秒)</label>
-            <input type="range" id="finalSpinDuration" min="0.5" max="7" step="0.5" value="5" data-default-value="5">
-            <span class="control-value" id="finalSpinDurationValue">
-                <span class="current-value">5秒</span>
-                <span class="default">(デフォルト: 5秒)</span>
-            </span>
-        </div>
+    // コードをlocalStorageに保存する関数
+    function saveCode(slot) {
+        localStorage.setItem(`html_code_slot_${slot}`, codeEditor.value);
+        alert(`スロット${slot}にコードを保存しました！`);
+    }
 
-        <div class="control-group">
-            <label for="finalSpinRotations">後半の追加回転回数</label>
-            <input type="range" id="finalSpinRotations" min="0" max="10" step="1" value="1" data-default-value="1">
-            <span class="control-value" id="finalSpinRotationsValue">
-                <span class="current-value">1回転</span>
-                <span class="default">(デフォルト: 1回転)</span>
-            </span>
-        </div>
-    </div>
-
-    <div id="rotation-button" onclick="rotateScreen()"></div>
-
-    <script>
-        class LEDSequence {
-            constructor() {
-                this.colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple'];
-                this.leds = [];
-                this.currentRotatingIndex = 0;
-                this.isRunning = false;
-                this.isPressing = false;
-                this.isFinished = false;
-                this.autoStartTimer = null;
-                this.pressAnimationInterval = null;
-                this.rotationInterval = null;
-                this.finalInterval = null;
-                this.startButton = document.getElementById('startButton');
-                this.device = document.getElementById('device');
-                this.init();
-                this.setupControls();
-                this.loadSettings();
-            }
-
-            init() {
-                this.createLEDs();
-                this.startButton.addEventListener('mousedown', (e) => this.startPress(e));
-                this.startButton.addEventListener('mouseup', (e) => this.endPress(e));
-                this.startButton.addEventListener('mouseleave', (e) => this.endPress(e));
-                this.startButton.addEventListener('touchstart', (e) => this.startPress(e));
-                this.startButton.addEventListener('touchend', (e) => this.endPress(e));
-                this.startButton.addEventListener('touchcancel', (e) => this.endPress(e));
-            }
-
-            setupControls() {
-                const controls = [
-                    { id: 'pressTime', valueId: 'pressTimeValue', suffix: '秒' },
-                    { id: 'pressRotations', valueId: 'pressRotationsValue', suffix: '回転' },
-                    { id: 'firstSpinDuration', valueId: 'firstSpinDurationValue', suffix: '秒' },
-                    { id: 'firstSpinRotations', valueId: 'firstSpinRotationsValue', suffix: '回転' },
-                    { id: 'finalSpinDuration', valueId: 'finalSpinDurationValue', suffix: '秒' },
-                    { id: 'finalSpinRotations', valueId: 'finalSpinRotationsValue', suffix: '回転' }
-                ];
-
-                controls.forEach(control => {
-                    const slider = document.getElementById(control.id);
-                    const valueDisplay = document.getElementById(control.valueId);
-
-                    const updateValue = () => {
-                        const currentValue = slider.value;
-                        const defaultValue = slider.getAttribute('data-default-value');
-                        valueDisplay.querySelector('.current-value').textContent = currentValue + control.suffix;
-                        valueDisplay.querySelector('.default').textContent = `(デフォルト: ${defaultValue}${control.suffix})`;
-                    };
-
-                    slider.addEventListener('input', () => {
-                        updateValue();
-                        this.saveSettings();
-                    });
-
-                    updateValue();
-                });
-            }
-
-            saveSettings() {
-                const settings = {
-                    pressTime: this.getControlValue('pressTime', false),
-                    pressRotations: this.getControlValue('pressRotations', false),
-                    firstSpinDuration: this.getControlValue('firstSpinDuration', false),
-                    firstSpinRotations: this.getControlValue('firstSpinRotations', false),
-                    finalSpinDuration: this.getControlValue('finalSpinDuration', false),
-                    finalSpinRotations: this.getControlValue('finalSpinRotations', false),
-                };
-                localStorage.setItem('arcLedSettings', JSON.stringify(settings));
-            }
-
-            loadSettings() {
-                const savedSettings = localStorage.getItem('arcLedSettings');
-                if (savedSettings) {
-                    const settings = JSON.parse(savedSettings);
-                    for (const key in settings) {
-                        const slider = document.getElementById(key);
-                        if (slider) slider.value = settings[key];
-                    }
-                    this.setupControls();
-                }
-            }
-
-            resetToDefault() {
-                const sliders = document.querySelectorAll('.controls-panel input[type="range"]');
-                sliders.forEach(slider => {
-                    const defaultValue = slider.getAttribute('data-default-value');
-                    slider.value = defaultValue;
-                });
-                this.setupControls();
-                this.saveSettings();
-            }
-
-            getControlValue(id, inMilliseconds = true) {
-                const value = parseFloat(document.getElementById(id).value);
-                if (inMilliseconds && (id.includes('Time') || id.includes('Duration'))) return value * 1000;
-                return value;
-            }
-
-            createLEDs() {
-                const radius = 115;
-                const centerX = 150;
-                const centerY = 150;
-                const startAngle = 225;
-                const totalAngle = 270;
-                const angleStep = totalAngle / 18;
-
-                for (let i = 0; i < 18; i++) {
-                    const angle = startAngle + (i * angleStep);
-                    const colorIndex = Math.floor(i / 3);
-                    const color = this.colors[colorIndex];
-                    const led = document.createElement('div');
-                    led.className = `led ${color}`;
-                    const radians = (angle * Math.PI) / 180;
-                    const x = centerX + radius * Math.cos(radians) - 8;
-                    const y = centerY + radius * Math.sin(radians) - 12;
-                    led.style.left = x + 'px';
-                    led.style.top = y + 'px';
-                    const rotation = angle + 180;
-                    led.style.transform = `rotate(${rotation}deg)`;
-                    this.device.appendChild(led);
-                    this.leds.push(led);
-                }
-            }
-
-            startPress(e) {
-                e.preventDefault();
-                if (this.isRunning || this.isFinished) { this.reset(); return; }
-                if (this.isPressing) return;
-
-                this.isPressing = true;
-                this.startButton.style.background = 'linear-gradient(145deg, #00aa66, #006644)';
-                this.lightAllLEDs();
-                this.startPressAnimation();
-
-                const pressTime = this.getControlValue('pressTime');
-                this.autoStartTimer = setTimeout(() => {
-                    if (this.isPressing) this.start();
-                }, pressTime);
-            }
-
-            lightAllLEDs() {
-                this.leds.forEach(led => {
-                    led.classList.remove('dim', 'blinking');
-                    led.classList.add('active');
-                });
-                this.device.classList.add('has-active-leds');
-            }
-
-            startPressAnimation() {
-                let currentDarkIndex = 0;
-                const pressTime = this.getControlValue('pressTime');
-                const rotations = this.getControlValue('pressRotations', false);
-                const stepTime = pressTime / (rotations * 18);
-
-                this.pressAnimationInterval = setInterval(() => {
-                    this.leds.forEach(led => {
-                        led.classList.remove('dim');
-                        led.classList.add('active');
-                    });
-                    this.leds[currentDarkIndex].classList.remove('active');
-                    this.leds[currentDarkIndex].classList.add('dim');
-                    currentDarkIndex = (currentDarkIndex + 1) % 18;
-                }, stepTime);
-            }
-
-            endPress(e) {
-                e.preventDefault();
-                if (!this.isPressing) return;
-                if (!this.isRunning) {
-                    this.reset();
-                } else {
-                    this.isPressing = false;
-                    this.startButton.style.background = '';
-                }
-            }
-
-            start() {
-                if (this.isRunning) return;
-                this.isRunning = true;
-                this.isPressing = false;
-                this.startButton.disabled = true;
-                this.startButton.style.background = '';
-
-                if (this.pressAnimationInterval) { clearInterval(this.pressAnimationInterval); this.pressAnimationInterval = null; }
-                if (this.autoStartTimer) { clearTimeout(this.autoStartTimer); this.autoStartTimer = null; }
-
-                this.startSpinSequence();
-            }
-
-            startSpinSequence() {
-                this.currentRotatingIndex = 0;
-                const totalRotations = this.getControlValue('firstSpinRotations', false);
-                const rotationDuration = this.getControlValue('firstSpinDuration');
-                const totalSteps = totalRotations * 18;
-                const stepDuration = rotationDuration / totalSteps;
-                let stepCount = 0;
-
-                this.leds.forEach(led => { led.classList.remove('dim'); led.classList.add('active'); });
-
-                this.rotationInterval = setInterval(() => {
-                    const prevIndex = (this.currentRotatingIndex - 1 + 18) % 18;
-                    this.leds[prevIndex].classList.remove('dim');
-                    this.leds[prevIndex].classList.add('active');
-
-                    this.leds[this.currentRotatingIndex].classList.remove('active');
-                    this.leds[this.currentRotatingIndex].classList.add('dim');
-
-                    this.currentRotatingIndex = (this.currentRotatingIndex + 1) % 18;
-                    stepCount++;
-
-                    if (stepCount >= totalSteps) {
-                        clearInterval(this.rotationInterval);
-                        this.rotationInterval = null;
-                        this.finalSpin();
-                    }
-                }, stepDuration);
-            }
-
-            finalSpin() {
-                const randomTarget = Math.floor(Math.random() * 18);
-                let currentIndex = this.currentRotatingIndex;
-                let stepCount = 0;
-
-                const additionalRotations = this.getControlValue('finalSpinRotations', false);
-                const finalSpinSteps = (18 - currentIndex + randomTarget) % 18 + (additionalRotations * 18);
-
-                const duration = this.getControlValue('finalSpinDuration');
-                const stepInterval = duration / finalSpinSteps;
-
-                this.leds.forEach(led => { led.classList.remove('dim'); led.classList.add('active'); });
-
-                this.finalInterval = setInterval(() => {
-                    const prevIndex = (currentIndex - 1 + 18) % 18;
-                    this.leds[prevIndex].classList.remove('dim');
-                    this.leds[prevIndex].classList.add('active');
-
-                    this.leds[currentIndex].classList.remove('active');
-                    this.leds[currentIndex].classList.add('dim');
-
-                    stepCount++;
-
-                    if (stepCount >= finalSpinSteps) {
-                        clearInterval(this.finalInterval);
-                        this.finalInterval = null;
-                        this.leds[currentIndex].classList.remove('dim');
-                        this.leds[currentIndex].classList.add('active');
-                        this.showFinalResult(currentIndex);
-                    } else {
-                        currentIndex = (currentIndex + 1) % 18;
-                    }
-                }, stepInterval);
-            }
-
-            showFinalResult(selectedIndex) {
-                this.leds.forEach(led => { led.classList.remove('dim'); led.classList.add('active'); });
-                this.leds[selectedIndex].classList.add('blinking');
-                this.isRunning = false;
-                this.isFinished = true;
-                this.startButton.disabled = false;
-            }
-
-            reset() {
-                this.isPressing = false;
-                this.isRunning = false;
-                this.isFinished = false;
-                this.startButton.disabled = false;
-                this.startButton.style.background = '';
-                this.device.classList.remove('has-active-leds');
-
-                if (this.pressAnimationInterval) { clearInterval(this.pressAnimationInterval); this.pressAnimationInterval = null; }
-                if (this.autoStartTimer) { clearTimeout(this.autoStartTimer); this.autoStartTimer = null; }
-                if (this.rotationInterval) { clearInterval(this.rotationInterval); this.rotationInterval = null; }
-                if (this.finalInterval) { clearInterval(this.finalInterval); this.finalInterval = null; }
-
-                this.leds.forEach(led => {
-                    led.classList.remove('active', 'dim', 'blinking');
-                    led.style.opacity = '1';
-                });
-            }
+    // localStorageからコードを呼び出す関数
+    function loadCode(slot) {
+        const savedCode = localStorage.getItem(`html_code_slot_${slot}`);
+        if (savedCode) {
+            codeEditor.value = savedCode;
+            alert(`スロット${slot}のコードを呼び出しました。`);
+        } else {
+            alert(`スロット${slot}には保存されたコードがありません。`);
         }
+    }
 
-        let deviceRotation = 277.5;
+    // 初期化時にスロット1のコードを読み込む
+    loadCode(1);
+</script>
 
-        function toggleSettings(event) {
-            event.stopPropagation();
-            const panel = document.getElementById('controlsPanel');
-            panel.classList.toggle('show');
-        }
-
-        document.addEventListener('click', (event) => {
-            const panel = document.getElementById('controlsPanel');
-            const settingsButton = document.querySelector('.settings-button');
-            const isClickInsidePanel = panel.contains(event.target);
-            const isClickOnButton = settingsButton.contains(event.target);
-            if (panel.classList.contains('show') && !isClickInsidePanel && !isClickOnButton) {
-                panel.classList.remove('show');
-            }
-        });
-
-        document.addEventListener('touchstart', (event) => {
-            const panel = document.getElementById('controlsPanel');
-            const settingsButton = document.querySelector('.settings-button');
-            const isTouchInsidePanel = panel.contains(event.target);
-            const isTouchOnButton = settingsButton.contains(event.target);
-            if (panel.classList.contains('show') && !isTouchInsidePanel && !isTouchOnButton) {
-                panel.classList.remove('show');
-            }
-        });
-
-        function rotateScreen() {
-            deviceRotation += 45;
-            const deviceContainer = document.querySelector('.device-container');
-            deviceContainer.style.transform = `translate(-50%, -50%) rotate(${deviceRotation}deg)`;
-
-            const rotationButton = document.getElementById('rotation-button');
-            rotationButton.style.background = 'rgba(255, 255, 255, 0.8)';
-            rotationButton.style.borderColor = 'rgba(255, 255, 255, 0.9)';
-            rotationButton.style.transform = 'scale(1.3)';
-            setTimeout(() => {
-                rotationButton.style.background = 'rgba(255, 255, 255, 0.3)';
-                rotationButton.style.borderColor = 'rgba(255, 255, 255, 0.4)';
-                rotationButton.style.transform = 'scale(1)';
-            }, 200);
-        }
-
-        document.addEventListener('keydown', function(event) {
-            switch(event.key.toLowerCase()) {
-                case ' ':
-                    event.preventDefault();
-                    rotateScreen();
-                    break;
-                case 'escape':
-                    if (window.ledSequence) window.ledSequence.reset();
-                    break;
-            }
-        });
-
-        window.addEventListener('DOMContentLoaded', () => {
-            window.ledSequence = new LEDSequence();
-        });
-    </script>
 </body>
 </html>
