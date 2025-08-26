@@ -14,6 +14,7 @@
         #saveBtn1, #saveBtn2, #saveBtn3 { background-color: #4CAF50; }
         #loadBtn1, #loadBtn2, #loadBtn3 { background-color: #2196F3; }
         #runBtn { background-color: #f44336; }
+        #resetBtn { background-color: #555; }
         #outputFrame { width: 100%; height: 300px; border: 1px solid #ccc; margin-top: 20px; }
     </style>
 </head>
@@ -38,6 +39,7 @@
             <button id="loadBtn3">スロット3を呼び出し</button>
         </div>
         <button id="runBtn">実行</button>
+        <button id="resetBtn">リセット</button>
     </div>
 
     <h3>出力プレビュー</h3>
@@ -48,6 +50,7 @@
     const codeEditor = document.getElementById('codeEditor');
     const outputFrame = document.getElementById('outputFrame');
     const runBtn = document.getElementById('runBtn');
+    const resetBtn = document.getElementById('resetBtn');
 
     document.getElementById('saveBtn1').addEventListener('click', () => saveCode(1));
     document.getElementById('loadBtn1').addEventListener('click', () => loadCode(1));
@@ -56,6 +59,7 @@
     document.getElementById('saveBtn3').addEventListener('click', () => saveCode(3));
     document.getElementById('loadBtn3').addEventListener('click', () => loadCode(3));
     runBtn.addEventListener('click', runCode);
+    resetBtn.addEventListener('click', resetCode);
 
     function runCode() {
         const code = codeEditor.value;
@@ -85,6 +89,15 @@
         } else {
             alert(`スロット${slot}には保存されたコードがありません。`);
         }
+    }
+
+    function resetCode() {
+        codeEditor.value = '';
+        const frameDoc = outputFrame.contentWindow.document;
+        frameDoc.open();
+        frameDoc.write('');
+        frameDoc.close();
+        alert('入力欄とプレビューをリセットしました。');
     }
 
     // 初期化時にスロット1のコードを読み込む
