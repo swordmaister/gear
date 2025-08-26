@@ -9,7 +9,7 @@
         .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: #333; }
         textarea { width: 100%; height: 250px; border: 1px solid #ccc; border-radius: 4px; padding: 10px; font-family: monospace; }
-        .controls { display: flex; justify-content: space-around; margin-top: 10px; }
+        .controls { display: flex; justify-content: space-around; margin-top: 10px; flex-wrap: wrap; gap: 10px; }
         button { padding: 10px 20px; font-size: 16px; cursor: pointer; border: none; border-radius: 5px; color: white; }
         #saveBtn1, #saveBtn2, #saveBtn3 { background-color: #4CAF50; }
         #loadBtn1, #loadBtn2, #loadBtn3 { background-color: #2196F3; }
@@ -25,15 +25,15 @@
     <textarea id="codeEditor"></textarea>
 
     <div class="controls">
-        <div>
+        <div style="display: flex; gap: 10px;">
             <button id="saveBtn1">スロット1に保存</button>
             <button id="loadBtn1">スロット1を呼び出し</button>
         </div>
-        <div>
+        <div style="display: flex; gap: 10px;">
             <button id="saveBtn2">スロット2に保存</button>
             <button id="loadBtn2">スロット2を呼び出し</button>
         </div>
-        <div>
+        <div style="display: flex; gap: 10px;">
             <button id="saveBtn3">スロット3に保存</button>
             <button id="loadBtn3">スロット3を呼び出し</button>
         </div>
@@ -49,33 +49,34 @@
     const outputFrame = document.getElementById('outputFrame');
     const runBtn = document.getElementById('runBtn');
 
-    // ボタンのイベントリスナーを設定
     document.getElementById('saveBtn1').addEventListener('click', () => saveCode(1));
     document.getElementById('loadBtn1').addEventListener('click', () => loadCode(1));
     document.getElementById('saveBtn2').addEventListener('click', () => saveCode(2));
     document.getElementById('loadBtn2').addEventListener('click', () => loadCode(2));
     document.getElementById('saveBtn3').addEventListener('click', () => saveCode(3));
     document.getElementById('loadBtn3').addEventListener('click', () => loadCode(3));
-
-    // 実行ボタン
     runBtn.addEventListener('click', runCode);
 
-    // コードを実行する関数
     function runCode() {
         const code = codeEditor.value;
         const frameDoc = outputFrame.contentWindow.document;
+
+        // プレビューを完全にリセット
+        frameDoc.open();
+        frameDoc.write('');
+        frameDoc.close();
+
+        // 新しいコードを書き込み
         frameDoc.open();
         frameDoc.write(code);
         frameDoc.close();
     }
 
-    // コードをlocalStorageに保存する関数
     function saveCode(slot) {
         localStorage.setItem(`html_code_slot_${slot}`, codeEditor.value);
         alert(`スロット${slot}にコードを保存しました！`);
     }
 
-    // localStorageからコードを呼び出す関数
     function loadCode(slot) {
         const savedCode = localStorage.getItem(`html_code_slot_${slot}`);
         if (savedCode) {
