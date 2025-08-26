@@ -15,7 +15,8 @@
         #loadBtn1, #loadBtn2, #loadBtn3 { background-color: #2196F3; }
         #runBtn { background-color: #f44336; }
         #resetBtn { background-color: #555; }
-        #outputFrame { width: 100%; height: 300px; border: 1px solid #ccc; margin-top: 20px; }
+        .output-container { width: 100%; height: 300px; border: 1px solid #ccc; margin-top: 20px; overflow: hidden; position: relative; }
+        #outputFrame { width: 100%; height: 100%; border: none; }
     </style>
 </head>
 <body>
@@ -43,15 +44,16 @@
     </div>
 
     <h3>出力プレビュー</h3>
-    <iframe id="outputFrame"></iframe>
+    <div class="output-container" id="outputContainer">
+        <iframe id="outputFrame"></iframe>
+    </div>
 </div>
 
 <script>
     const codeEditor = document.getElementById('codeEditor');
-    const outputFrame = document.getElementById('outputFrame');
     const runBtn = document.getElementById('runBtn');
     const resetBtn = document.getElementById('resetBtn');
-
+    
     document.getElementById('saveBtn1').addEventListener('click', () => saveCode(1));
     document.getElementById('loadBtn1').addEventListener('click', () => loadCode(1));
     document.getElementById('saveBtn2').addEventListener('click', () => saveCode(2));
@@ -61,16 +63,29 @@
     runBtn.addEventListener('click', runCode);
     resetBtn.addEventListener('click', resetCode);
 
+    // プレビュー画面のDOMを完全にリセットする関数
+    function resetIframe() {
+        const outputContainer = document.getElementById('outputContainer');
+        const oldIframe = document.getElementById('outputFrame');
+
+        // 古いiframeを完全に削除
+        if (oldIframe) {
+            outputContainer.removeChild(oldIframe);
+        }
+
+        // 新しいiframeを作成して挿入
+        const newIframe = document.createElement('iframe');
+        newIframe.id = 'outputFrame';
+        outputContainer.appendChild(newIframe);
+        return newIframe;
+    }
+
     function runCode() {
         const code = codeEditor.value;
+        const outputFrame = resetIframe(); // 新しいiframeを生成
         const frameDoc = outputFrame.contentWindow.document;
 
-        // プレビューを完全にリセットする
-        frameDoc.open();
-        frameDoc.write('');
-        frameDoc.close();
-
-        // 新しいコードを書き込む
+        // 新しいiframeにコードを書き込む
         frameDoc.open();
         frameDoc.write(code);
         frameDoc.close();
@@ -93,10 +108,7 @@
 
     function resetCode() {
         codeEditor.value = '';
-        const frameDoc = outputFrame.contentWindow.document;
-        frameDoc.open();
-        frameDoc.write('');
-        frameDoc.close();
+        resetIframe(); // iframeもリセット
         alert('入力欄とプレビューをリセットしました。');
     }
 
