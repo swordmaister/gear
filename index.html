@@ -65,12 +65,12 @@
         const code = codeEditor.value;
         const frameDoc = outputFrame.contentWindow.document;
 
-        // プレビューを完全にリセット
+        // プレビューを完全にリセットする
         frameDoc.open();
         frameDoc.write('');
         frameDoc.close();
 
-        // 新しいコードを書き込み
+        // 新しいコードを書き込む
         frameDoc.open();
         frameDoc.write(code);
         frameDoc.close();
