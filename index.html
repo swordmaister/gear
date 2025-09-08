@@ -2,8 +2,13 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Code Runner 演出モード</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       font-family: sans-serif;
@@ -33,13 +38,10 @@
       border-radius: 4px;
       font-size: 14px;
       cursor: pointer;
-      margin-left: 10px;
     }
 
     #editorContainer {
       padding: 10px;
-      transition: height 0.3s ease;
-      overflow: hidden;
       background-color: #ffffff;
     }
 
@@ -50,23 +52,23 @@
       padding: 10px;
       border: 1px solid #ccc;
       border-radius: 4px;
-      box-sizing: border-box;
     }
 
     #controls {
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
       gap: 10px;
       padding: 10px;
     }
 
     button {
-      padding: 10px 20px;
+      padding: 10px;
       font-size: 14px;
       border: none;
       border-radius: 5px;
       cursor: pointer;
       color: white;
+      width: 100%;
     }
 
     #runBtn { background-color: #f44336; }
@@ -80,7 +82,7 @@
       height: 300px;
       border: 1px solid #ccc;
       background-color: white;
-      box-sizing: border-box;
+      padding: 5px;
       position: relative;
       z-index: 1;
     }
@@ -94,15 +96,22 @@
     .hidden {
       display: none;
     }
+
+    @media (min-width: 600px) {
+      #controls {
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+      button {
+        width: auto;
+      }
+    }
   </style>
 </head>
 <body>
 
   <div id="fullscreenBar">
-    <div>
-      <button id="exitFullscreenTopBtn">元に戻す</button>
-      <button id="toggleEditorBtn">エディタを隠す</button>
-    </div>
+    <button id="exitFullscreenTopBtn">元に戻す</button>
     <div>🎬 プレビュー演出モード</div>
   </div>
 
@@ -111,11 +120,11 @@
   </div>
 
   <div id="controls">
-    <button class="saveBtn" onclick="saveCode(1)">スロット1に保存</button>
+    <button class="saveBtn" onclick="confirmSave(1)">スロット1に保存</button>
     <button class="loadBtn" onclick="loadCode(1)">スロット1を呼び出し</button>
-    <button class="saveBtn" onclick="saveCode(2)">スロット2に保存</button>
+    <button class="saveBtn" onclick="confirmSave(2)">スロット2に保存</button>
     <button class="loadBtn" onclick="loadCode(2)">スロット2を呼び出し</button>
-    <button class="saveBtn" onclick="saveCode(3)">スロット3に保存</button>
+    <button class="saveBtn" onclick="confirmSave(3)">スロット3に保存</button>
     <button class="loadBtn" onclick="loadCode(3)">スロット3を呼び出し</button>
     <button id="runBtn">実行</button>
     <button id="resetBtn">リセット</button>
@@ -132,9 +141,6 @@
     const fullscreenBtn = document.getElementById('fullscreenBtn');
     const fullscreenBar = document.getElementById('fullscreenBar');
     const exitFullscreenTopBtn = document.getElementById('exitFullscreenTopBtn');
-    const toggleEditorBtn = document.getElementById('toggleEditorBtn');
-    const editorContainer = document.getElementById('editorContainer');
-    let editorVisible = true;
 
     document.getElementById('runBtn').addEventListener('click', runCode);
     document.getElementById('resetBtn').addEventListener('click', resetCode);
@@ -151,11 +157,6 @@
     });
 
     exitFullscreenTopBtn.addEventListener('click', exitFullscreen);
-    toggleEditorBtn.addEventListener('click', () => {
-      editorVisible = !editorVisible;
-      editorContainer.style.height = editorVisible ? 'auto' : '0';
-      toggleEditorBtn.textContent = editorVisible ? 'エディタを隠す' : 'エディタを表示';
-    });
 
     function exitFullscreen() {
       outputContainer.style.position = 'relative';
@@ -178,6 +179,11 @@
     function resetCode() {
       codeEditor.value = '';
       runCode();
+    }
+
+    function confirmSave(slot) {
+      const ok = confirm(`スロット${slot}に現在のコードを保存しますか？`);
+      if (ok) saveCode(slot);
     }
 
     function saveCode(slot) {
