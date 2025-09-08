@@ -11,8 +11,9 @@
 
     body {
       margin: 0;
-      font-family: sans-serif;
-      background-color: #f0f0f0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f7fa;
+      color: #333;
     }
 
     #fullscreenBar {
@@ -27,70 +28,112 @@
       justify-content: space-between;
       padding: 0 20px;
       z-index: 10000;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
     #fullscreenBar button {
-      background-color: #ff9800;
+      background-color: #ff5722;
       color: white;
       border: none;
       padding: 8px 16px;
-      border-radius: 4px;
+      border-radius: 25px;
       font-size: 14px;
+      font-weight: bold;
       cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    #fullscreenBar button:hover {
+      background-color: #e64a19;
     }
 
     #editorContainer {
-      padding: 10px;
+      padding: 15px;
       background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      margin: 15px;
     }
 
     #codeEditor {
       width: 100%;
       height: 250px;
-      font-family: monospace;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      padding: 15px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      resize: vertical;
+      background-color: #fafafa;
+      transition: border-color 0.3s;
+    }
+
+    #codeEditor:focus {
+      outline: none;
+      border-color: #007bff;
     }
 
     #controls {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
       gap: 10px;
-      padding: 10px;
+      padding: 15px;
+      margin: 0 15px;
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .control-group {
+        display: contents;
     }
 
     button {
-      padding: 10px;
-      font-size: 14px;
+      padding: 12px;
+      font-size: 15px;
+      font-weight: bold;
       border: none;
-      border-radius: 5px;
+      border-radius: 25px;
       cursor: pointer;
       color: white;
       width: 100%;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
 
     #runBtn { background-color: #f44336; }
-    #resetBtn { background-color: #555; }
-    #fullscreenBtn { background-color: #2196f3; }
-    .saveBtn { background-color: #4CAF50; }
-    .loadBtn { background-color: #2196F3; }
+    #resetBtn { background-color: #607d8b; }
+    #fullscreenBtn { background-color: #007bff; }
+    .saveBtn { background-color: #4caf50; }
+    .loadBtn { background-color: #2196f3; }
+
+    #runBtn:hover { background-color: #d32f2f; }
+    #resetBtn:hover { background-color: #455a64; }
+    #fullscreenBtn:hover { background-color: #0056b3; }
+    .saveBtn:hover { background-color: #388e3c; }
+    .loadBtn:hover { background-color: #1565c0; }
 
     #outputContainer {
       width: 100%;
       height: 300px;
-      border: 1px solid #ccc;
-      background-color: white;
+      border: 1px solid #e0e0e0;
+      background-color: #ffffff;
       padding: 5px;
       position: relative;
       z-index: 1;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      margin: 15px;
     }
 
     #outputFrame {
       width: 100%;
       height: 100%;
       border: none;
+      border-radius: 6px;
     }
 
     .hidden {
@@ -99,8 +142,12 @@
 
     @media (min-width: 600px) {
       #controls {
-        flex-direction: row;
-        flex-wrap: wrap;
+        grid-template-columns: repeat(4, 1fr);
+      }
+      .control-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
       }
       button {
         width: auto;
@@ -120,15 +167,29 @@
   </div>
 
   <div id="controls">
-    <button class="saveBtn" onclick="confirmSave(1)">スロット1に保存</button>
-    <button class="loadBtn" onclick="loadCode(1)">スロット1を呼び出し</button>
-    <button class="saveBtn" onclick="confirmSave(2)">スロット2に保存</button>
-    <button class="loadBtn" onclick="loadCode(2)">スロット2を呼び出し</button>
-    <button class="saveBtn" onclick="confirmSave(3)">スロット3に保存</button>
-    <button class="loadBtn" onclick="loadCode(3)">スロット3を呼び出し</button>
-    <button id="runBtn">実行</button>
-    <button id="resetBtn">リセット</button>
-    <button id="fullscreenBtn">フルスクリーン表示</button>
+    <div class="control-group">
+      <button class="saveBtn" data-slot="1">保存 1</button>
+      <button class="loadBtn" data-slot="1">読込 1</button>
+    </div>
+    <div class="control-group">
+      <button class="saveBtn" data-slot="2">保存 2</button>
+      <button class="loadBtn" data-slot="2">読込 2</button>
+    </div>
+    <div class="control-group">
+      <button class="saveBtn" data-slot="3">保存 3</button>
+      <button class="loadBtn" data-slot="3">読込 3</button>
+    </div>
+    <div class="control-group">
+      <button class="saveBtn" data-slot="4">保存 4</button>
+      <button class="loadBtn" data-slot="4">読込 4</button>
+    </div>
+    <div class="control-group">
+      <button class="saveBtn" data-slot="5">保存 5</button>
+      <button class="loadBtn" data-slot="5">読込 5</button>
+    </div>
+    <button id="runBtn">実行 ▶️</button>
+    <button id="resetBtn">リセット 🔄</button>
+    <button id="fullscreenBtn">フルスクリーン 🖼️</button>
   </div>
 
   <div id="outputContainer">
@@ -144,28 +205,17 @@
 
     document.getElementById('runBtn').addEventListener('click', runCode);
     document.getElementById('resetBtn').addEventListener('click', resetCode);
+    fullscreenBtn.addEventListener('click', toggleFullscreen);
+    exitFullscreenTopBtn.addEventListener('click', toggleFullscreen);
 
-    fullscreenBtn.addEventListener('click', () => {
-      outputContainer.style.position = 'fixed';
-      outputContainer.style.top = '50px';
-      outputContainer.style.left = '0';
-      outputContainer.style.width = '100vw';
-      outputContainer.style.height = 'calc(100vh - 50px)';
-      outputContainer.style.zIndex = '9999';
-      fullscreenBtn.classList.add('hidden');
-      fullscreenBar.style.display = 'flex';
+    // スロットボタンのイベントリスナーをまとめて設定
+    document.querySelectorAll('.saveBtn').forEach(button => {
+      button.addEventListener('click', () => confirmSave(button.dataset.slot));
     });
 
-    exitFullscreenTopBtn.addEventListener('click', exitFullscreen);
-
-    function exitFullscreen() {
-      outputContainer.style.position = 'relative';
-      outputContainer.style.width = '100%';
-      outputContainer.style.height = '300px';
-      outputContainer.style.zIndex = '1';
-      fullscreenBtn.classList.remove('hidden');
-      fullscreenBar.style.display = 'none';
-    }
+    document.querySelectorAll('.loadBtn').forEach(button => {
+      button.addEventListener('click', () => loadCode(button.dataset.slot));
+    });
 
     function runCode() {
       const code = codeEditor.value;
@@ -181,23 +231,55 @@
       runCode();
     }
 
+    function toggleFullscreen() {
+      const isFullscreen = outputContainer.style.position === 'fixed';
+      if (isFullscreen) {
+        outputContainer.style.position = 'relative';
+        outputContainer.style.width = '100%';
+        outputContainer.style.height = '300px';
+        outputContainer.style.zIndex = '1';
+        fullscreenBtn.classList.remove('hidden');
+        fullscreenBar.style.display = 'none';
+      } else {
+        outputContainer.style.position = 'fixed';
+        outputContainer.style.top = '50px';
+        outputContainer.style.left = '0';
+        outputContainer.style.width = '100vw';
+        outputContainer.style.height = 'calc(100vh - 50px)';
+        outputContainer.style.zIndex = '9999';
+        fullscreenBtn.classList.add('hidden');
+        fullscreenBar.style.display = 'flex';
+      }
+    }
+
     function confirmSave(slot) {
       const ok = confirm(`スロット${slot}に現在のコードを保存しますか？`);
       if (ok) saveCode(slot);
     }
 
     function saveCode(slot) {
-      localStorage.setItem(`html_code_slot_${slot}`, codeEditor.value);
-      alert(`スロット${slot}に保存しました`);
+      const code = codeEditor.value;
+      const titleMatch = code.match(/<title>(.*?)<\/title>/);
+      const title = titleMatch ? titleMatch[1] : 'タイトルなし';
+      
+      const data = {
+        code: code,
+        title: title
+      };
+      
+      localStorage.setItem(`html_code_slot_${slot}`, JSON.stringify(data));
+      alert(`スロット${slot}に保存しました！\nタイトル: ${title}`);
     }
 
     function loadCode(slot) {
       const saved = localStorage.getItem(`html_code_slot_${slot}`);
       if (saved) {
-        codeEditor.value = saved;
-        alert(`スロット${slot}を読み込みました`);
+        const data = JSON.parse(saved);
+        codeEditor.value = data.code;
+        runCode();
+        alert(`スロット${slot}を読み込みました！\nタイトル: ${data.title}`);
       } else {
-        alert(`スロット${slot}には保存されたコードがありません`);
+        alert(`スロット${slot}には保存されたコードがありません。`);
       }
     }
 
