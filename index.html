@@ -2,13 +2,15 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>コードランナー</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>コード演出ランナー</title>
   <style>
+    * { box-sizing: border-box; }
     body {
-      font-family: 'Segoe UI', sans-serif;
       margin: 0;
-      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
       background: #f4f4f4;
+      color: #333;
     }
     header {
       background: #333;
@@ -27,37 +29,55 @@
     }
     #controls {
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
       gap: 0.5em;
       padding: 1em;
       background: #eee;
     }
-    button {
-      padding: 0.5em 1em;
+    button, select {
+      padding: 0.8em;
+      font-size: 16px;
       border: none;
+      border-radius: 6px;
       background: #444;
       color: white;
       cursor: pointer;
-      border-radius: 4px;
     }
     button:hover {
       background: #666;
     }
     select {
-      padding: 0.5em;
-      border-radius: 4px;
+      background: #222;
+    }
+    #previewContainer {
+      position: relative;
+      width: 100%;
+      height: 300px;
+      background: white;
     }
     iframe {
       width: 100%;
-      height: 300px;
+      height: 100%;
       border: none;
-      background: white;
+    }
+    @media (min-width: 600px) {
+      #controls {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-between;
+      }
+      button, select {
+        flex: 1 1 150px;
+      }
     }
   </style>
 </head>
 <body>
+
   <header>🎬 コード演出ランナー</header>
+
   <textarea id="editor" placeholder="ここにHTML/JSコードを入力してください"></textarea>
+
   <div id="controls">
     <button onclick="runCode()">▶ 実行</button>
     <button onclick="resetCode()">🔄 リセット</button>
@@ -66,16 +86,22 @@
       <option value="slot1">保存スロット1</option>
       <option value="slot2">保存スロット2</option>
       <option value="slot3">保存スロット3</option>
+      <option value="slot4">保存スロット4</option>
+      <option value="slot5">保存スロット5</option>
     </select>
     <button onclick="saveCode()">💾 保存</button>
     <button onclick="loadCode()">📂 読み込み</button>
   </div>
-  <iframe id="preview"></iframe>
+
+  <div id="previewContainer">
+    <iframe id="preview"></iframe>
+  </div>
 
   <script>
     const editor = document.getElementById('editor');
     const preview = document.getElementById('preview');
     const slotSelector = document.getElementById('slotSelector');
+    const previewContainer = document.getElementById('previewContainer');
 
     function runCode() {
       const code = editor.value;
@@ -91,7 +117,9 @@
 
     function toggleFullscreen() {
       if (!document.fullscreenElement) {
-        preview.requestFullscreen();
+        previewContainer.requestFullscreen().catch(err => {
+          alert('フルスクリーンにできませんでした：' + err.message);
+        });
       } else {
         document.exitFullscreen();
       }
@@ -113,6 +141,10 @@
         alert(`保存されていません：${slot}`);
       }
     }
+
+    // 初期化
+    preview.src = 'about:blank';
   </script>
+
 </body>
 </html>
