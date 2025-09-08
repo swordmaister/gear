@@ -5,24 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Code Runner 演出モード</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f5f7fa;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: #f5f7fa;
       color: #333;
     }
-
     #fullscreenBar {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 50px;
-      background-color: rgba(255, 255, 255, 0.95);
+      top: 0; left: 0;
+      width: 100%; height: 50px;
+      background: rgba(255,255,255,0.95);
       display: none;
       align-items: center;
       justify-content: space-between;
@@ -30,129 +24,64 @@
       z-index: 10000;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
-
     #fullscreenBar button {
-      background-color: #ff5722;
-      color: white;
+      background: #ff5722;
+      color: #fff;
       border: none;
       padding: 8px 16px;
       border-radius: 25px;
-      font-size: 14px;
       font-weight: bold;
       cursor: pointer;
-      transition: background-color 0.3s;
     }
-
-    #fullscreenBar button:hover {
-      background-color: #e64a19;
-    }
-
-    #editorContainer {
+    #editorContainer, #controls, #outputContainer {
+      margin: 15px;
       padding: 15px;
-      background-color: #ffffff;
+      background: #fff;
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      margin: 15px;
     }
-
     #codeEditor {
-      width: 100%;
-      height: 250px;
-      font-family: 'Consolas', 'Monaco', monospace;
+      width: 100%; height: 250px;
+      font-family: 'Consolas', monospace;
       padding: 15px;
       border: 1px solid #e0e0e0;
       border-radius: 8px;
       resize: vertical;
-      background-color: #fafafa;
-      transition: border-color 0.3s;
+      background: #fafafa;
     }
-
     #codeEditor:focus {
       outline: none;
       border-color: #007bff;
     }
-
     #controls {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
       gap: 10px;
-      padding: 15px;
-      margin: 0 15px;
-      background-color: #ffffff;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
-
-    .control-group {
-        display: contents;
-    }
-
     button {
       padding: 12px;
-      font-size: 15px;
       font-weight: bold;
       border: none;
       border-radius: 25px;
       cursor: pointer;
-      color: white;
-      width: 100%;
+      color: #fff;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-
     button:hover {
       transform: translateY(-2px);
       box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
-
-    #runBtn { background-color: #f44336; }
-    #resetBtn { background-color: #607d8b; }
-    #fullscreenBtn { background-color: #007bff; }
-    .saveBtn { background-color: #4caf50; }
-    .loadBtn { background-color: #2196f3; }
-
-    #runBtn:hover { background-color: #d32f2f; }
-    #resetBtn:hover { background-color: #455a64; }
-    #fullscreenBtn:hover { background-color: #0056b3; }
-    .saveBtn:hover { background-color: #388e3c; }
-    .loadBtn:hover { background-color: #1565c0; }
-
+    #runBtn { background: #f44336; }
+    #resetBtn { background: #607d8b; }
+    #fullscreenBtn { background: #007bff; }
+    .saveBtn { background: #4caf50; }
+    .loadBtn { background: #2196f3; }
     #outputContainer {
-      width: 100%;
       height: 300px;
-      border: 1px solid #e0e0e0;
-      background-color: #ffffff;
-      padding: 5px;
       position: relative;
       z-index: 1;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      margin: 15px;
     }
-
-    #outputFrame {
-      width: 100%;
-      height: 100%;
-      border: none;
-      border-radius: 6px;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    @media (min-width: 600px) {
-      #controls {
-        grid-template-columns: repeat(4, 1fr);
-      }
-      .control-group {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-      }
-      button {
-        width: auto;
-      }
-    }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
@@ -163,38 +92,21 @@
   </div>
 
   <div id="editorContainer">
-    <textarea id="codeEditor"></textarea>
+    <textarea id="codeEditor" placeholder="ここにHTMLコードを入力してください"></textarea>
   </div>
 
   <div id="controls">
-    <div class="control-group">
-      <button class="saveBtn" data-slot="1">保存 1</button>
-      <button class="loadBtn" data-slot="1">読込 1</button>
-    </div>
-    <div class="control-group">
-      <button class="saveBtn" data-slot="2">保存 2</button>
-      <button class="loadBtn" data-slot="2">読込 2</button>
-    </div>
-    <div class="control-group">
-      <button class="saveBtn" data-slot="3">保存 3</button>
-      <button class="loadBtn" data-slot="3">読込 3</button>
-    </div>
-    <div class="control-group">
-      <button class="saveBtn" data-slot="4">保存 4</button>
-      <button class="loadBtn" data-slot="4">読込 4</button>
-    </div>
-    <div class="control-group">
-      <button class="saveBtn" data-slot="5">保存 5</button>
-      <button class="loadBtn" data-slot="5">読込 5</button>
-    </div>
+    <!-- 保存・読込ボタン -->
+    ${[1,2,3,4,5].map(i => `
+      <button class="saveBtn" data-slot="${i}">保存 ${i}</button>
+      <button class="loadBtn" data-slot="${i}">読込 ${i}</button>
+    `).join('')}
     <button id="runBtn">実行 ▶️</button>
     <button id="resetBtn">リセット 🔄</button>
     <button id="fullscreenBtn">フルスクリーン 🖼️</button>
   </div>
 
-  <div id="outputContainer">
-    <iframe id="outputFrame"></iframe>
-  </div>
+  <div id="outputContainer"></div>
 
   <script>
     const codeEditor = document.getElementById('codeEditor');
@@ -208,22 +120,28 @@
     fullscreenBtn.addEventListener('click', toggleFullscreen);
     exitFullscreenTopBtn.addEventListener('click', toggleFullscreen);
 
-    // スロットボタンのイベントリスナーをまとめて設定
-    document.querySelectorAll('.saveBtn').forEach(button => {
-      button.addEventListener('click', () => confirmSave(button.dataset.slot));
-    });
-
-    document.querySelectorAll('.loadBtn').forEach(button => {
-      button.addEventListener('click', () => loadCode(button.dataset.slot));
-    });
+    document.querySelectorAll('.saveBtn').forEach(btn =>
+      btn.addEventListener('click', () => confirmSave(btn.dataset.slot))
+    );
+    document.querySelectorAll('.loadBtn').forEach(btn =>
+      btn.addEventListener('click', () => loadCode(btn.dataset.slot))
+    );
 
     function runCode() {
       const code = codeEditor.value;
-      const outputFrame = document.getElementById('outputFrame');
-      const frameDoc = outputFrame.contentWindow.document;
-      frameDoc.open();
-      frameDoc.write(code);
-      frameDoc.close();
+      const oldFrame = document.getElementById('outputFrame');
+      if (oldFrame) oldFrame.remove();
+
+      const newFrame = document.createElement('iframe');
+      newFrame.id = 'outputFrame';
+      newFrame.style.width = '100%';
+      newFrame.style.height = '100%';
+      newFrame.style.border = 'none';
+      newFrame.style.borderRadius = '6px';
+      outputContainer.appendChild(newFrame);
+
+      const doc = newFrame.contentWindow.document;
+      doc.open(); doc.write(code); doc.close();
     }
 
     function resetCode() {
@@ -234,56 +152,52 @@
     function toggleFullscreen() {
       const isFullscreen = outputContainer.style.position === 'fixed';
       if (isFullscreen) {
-        outputContainer.style.position = 'relative';
-        outputContainer.style.width = '100%';
-        outputContainer.style.height = '300px';
-        outputContainer.style.zIndex = '1';
+        Object.assign(outputContainer.style, {
+          position: 'relative',
+          width: '100%',
+          height: '300px',
+          zIndex: '1'
+        });
         fullscreenBtn.classList.remove('hidden');
         fullscreenBar.style.display = 'none';
       } else {
-        outputContainer.style.position = 'fixed';
-        outputContainer.style.top = '50px';
-        outputContainer.style.left = '0';
-        outputContainer.style.width = '100vw';
-        outputContainer.style.height = 'calc(100vh - 50px)';
-        outputContainer.style.zIndex = '9999';
+        Object.assign(outputContainer.style, {
+          position: 'fixed',
+          top: '50px',
+          left: '0',
+          width: '100vw',
+          height: 'calc(100vh - 50px)',
+          zIndex: '9999'
+        });
         fullscreenBtn.classList.add('hidden');
         fullscreenBar.style.display = 'flex';
       }
     }
 
     function confirmSave(slot) {
-      const ok = confirm(`スロット${slot}に現在のコードを保存しますか？`);
-      if (ok) saveCode(slot);
+      if (confirm(`スロット${slot}に保存しますか？`)) saveCode(slot);
     }
 
     function saveCode(slot) {
       const code = codeEditor.value;
-      const titleMatch = code.match(/<title>(.*?)<\/title>/);
-      const title = titleMatch && titleMatch[1] ? titleMatch[1] : 'タイトルなし';
-      
-      const data = {
-        code: code,
-        title: title
-      };
-      
-      localStorage.setItem(`html_code_slot_${slot}`, JSON.stringify(data));
-      alert(`スロット${slot}に保存しました！\nタイトル: ${title}`);
+      const title = (code.match(/<title>(.*?)<\/title>/) || [])[1] || 'タイトルなし';
+      localStorage.setItem(`slot${slot}`, JSON.stringify({ code, title }));
+      alert(`保存完了！\nスロット${slot}\nタイトル: ${title}`);
     }
 
     function loadCode(slot) {
-      const saved = localStorage.getItem(`html_code_slot_${slot}`);
+      const saved = localStorage.getItem(`slot${slot}`);
       if (saved) {
-        const data = JSON.parse(saved);
-        codeEditor.value = data.code;
-        runCode(); // ここでプレビューを自動更新
-        alert(`スロット${slot}を読み込みました！\nタイトル: ${data.title}`);
+        const { code, title } = JSON.parse(saved);
+        codeEditor.value = code;
+        runCode();
+        alert(`読込完了！\nスロット${slot}\nタイトル: ${title}`);
       } else {
         alert(`スロット${slot}には保存されたコードがありません。`);
       }
     }
 
-    // 初期ロード
+    // 初期ロード（任意）
     loadCode(1);
   </script>
 
