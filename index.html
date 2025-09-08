@@ -2,195 +2,139 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Code Saver & Runner</title>
+  <title>プレビュー演出モード</title>
   <style>
     body {
+      margin: 0;
       font-family: sans-serif;
-      padding: 20px;
-      background-color: #f0f0f0;
     }
-    .container {
-      max-width: 800px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    h1 {
-      text-align: center;
-      color: #333;
-    }
-    textarea {
+
+    #fullscreenBar {
+      position: fixed;
+      top: 0;
+      left: 0;
       width: 100%;
-      height: 250px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      padding: 10px;
-      font-family: monospace;
+      height: 50px;
+      background-color: rgba(255, 255, 255, 0.95);
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 10000;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
-    .controls {
-      display: flex;
-      justify-content: space-around;
-      margin-top: 10px;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-      border: none;
-      border-radius: 5px;
-      color: white;
-    }
-    #saveBtn1, #saveBtn2, #saveBtn3 {
-      background-color: #4CAF50;
-    }
-    #loadBtn1, #loadBtn2, #loadBtn3 {
-      background-color: #2196F3;
-    }
-    #runBtn {
-      background-color: #f44336;
-    }
-    #resetBtn {
-      background-color: #555;
-    }
-    #fullscreenBtn, #exitFullscreenBtn {
+
+    #fullscreenBar button {
       background-color: #ff9800;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      margin-left: 10px;
     }
-    .output-container {
+
+    #editorContainer {
       width: 100%;
       height: 300px;
-      border: 1px solid #ccc;
-      margin-top: 20px;
-      overflow: hidden;
-      position: relative;
-      transition: all 0.3s ease;
-      z-index: 1;
-      background-color: white;
+      background-color: #f0f0f0;
+      padding: 10px;
+      box-sizing: border-box;
+      transition: height 0.3s ease;
     }
-    #outputFrame {
+
+    #outputContainer {
       width: 100%;
-      height: 100%;
+      height: 300px;
+      background-color: #ddd;
+      padding: 10px;
+      box-sizing: border-box;
+      transition: all 0.3s ease;
+    }
+
+    #controls {
+      margin: 10px;
+    }
+
+    #fullscreenBtn {
+      background-color: #2196f3;
+      color: white;
       border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none;
     }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <h1>HTML Code Runner</h1>
-  <p>ここにHTMLコードを入力してください。保存・呼び出し・実行・リセット・フルスクリーン切り替えが可能です。</p>
-  <textarea id="codeEditor"></textarea>
+  <div id="fullscreenBar">
+    <div>
+      <button id="exitFullscreenTopBtn">元に戻す</button>
+      <button id="toggleEditorBtn">エディタを隠す</button>
+    </div>
+    <div>🎬 プレビュー演出モード</div>
+  </div>
 
-  <div class="controls">
-    <div style="display: flex; gap: 10px;">
-      <button id="saveBtn1">スロット1に保存</button>
-      <button id="loadBtn1">スロット1を呼び出し</button>
-    </div>
-    <div style="display: flex; gap: 10px;">
-      <button id="saveBtn2">スロット2に保存</button>
-      <button id="loadBtn2">スロット2を呼び出し</button>
-    </div>
-    <div style="display: flex; gap: 10px;">
-      <button id="saveBtn3">スロット3に保存</button>
-      <button id="loadBtn3">スロット3を呼び出し</button>
-    </div>
-    <button id="runBtn">実行</button>
-    <button id="resetBtn">リセット</button>
+  <div id="controls">
     <button id="fullscreenBtn">フルスクリーン表示</button>
-    <button id="exitFullscreenBtn" style="display: none;">元に戻す</button>
   </div>
 
-  <h3>出力プレビュー</h3>
-  <div class="output-container" id="outputContainer">
-    <iframe id="outputFrame"></iframe>
+  <div id="editorContainer">
+    <textarea style="width: 100%; height: 100%;"></textarea>
   </div>
-</div>
 
-<script>
-  const codeEditor = document.getElementById('codeEditor');
-  const runBtn = document.getElementById('runBtn');
-  const resetBtn = document.getElementById('resetBtn');
-  const fullscreenBtn = document.getElementById('fullscreenBtn');
-  const exitFullscreenBtn = document.getElementById('exitFullscreenBtn');
-  const outputContainer = document.getElementById('outputContainer');
+  <div id="outputContainer">
+    <p>ここにプレビューが表示されます。</p>
+  </div>
 
-  document.getElementById('saveBtn1').addEventListener('click', () => saveCode(1));
-  document.getElementById('loadBtn1').addEventListener('click', () => loadCode(1));
-  document.getElementById('saveBtn2').addEventListener('click', () => saveCode(2));
-  document.getElementById('loadBtn2').addEventListener('click', () => loadCode(2));
-  document.getElementById('saveBtn3').addEventListener('click', () => saveCode(3));
-  document.getElementById('loadBtn3').addEventListener('click', () => loadCode(3));
-  runBtn.addEventListener('click', runCode);
-  resetBtn.addEventListener('click', resetCode);
+  <script>
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const fullscreenBar = document.getElementById('fullscreenBar');
+    const exitFullscreenTopBtn = document.getElementById('exitFullscreenTopBtn');
+    const toggleEditorBtn = document.getElementById('toggleEditorBtn');
+    const editorContainer = document.getElementById('editorContainer');
+    const outputContainer = document.getElementById('outputContainer');
 
-  fullscreenBtn.addEventListener('click', () => {
-    outputContainer.style.position = 'fixed';
-    outputContainer.style.top = '0';
-    outputContainer.style.left = '0';
-    outputContainer.style.width = '100vw';
-    outputContainer.style.height = '100vh';
-    outputContainer.style.zIndex = '9999';
-    fullscreenBtn.style.display = 'none';
-    exitFullscreenBtn.style.display = 'inline-block';
-  });
+    let editorVisible = true;
 
-  exitFullscreenBtn.addEventListener('click', () => {
-    outputContainer.style.position = 'relative';
-    outputContainer.style.width = '100%';
-    outputContainer.style.height = '300px';
-    outputContainer.style.zIndex = '1';
-    fullscreenBtn.style.display = 'inline-block';
-    exitFullscreenBtn.style.display = 'none';
-  });
+    fullscreenBtn.addEventListener('click', () => {
+      outputContainer.style.position = 'fixed';
+      outputContainer.style.top = '50px';
+      outputContainer.style.left = '0';
+      outputContainer.style.width = '100vw';
+      outputContainer.style.height = 'calc(100vh - 50px)';
+      outputContainer.style.zIndex = '9999';
+      fullscreenBtn.classList.add('hidden');
+      fullscreenBar.style.display = 'flex';
+    });
 
-  function resetIframe() {
-    const oldIframe = document.getElementById('outputFrame');
-    if (oldIframe) {
-      outputContainer.removeChild(oldIframe);
-    }
-    const newIframe = document.createElement('iframe');
-    newIframe.id = 'outputFrame';
-    outputContainer.appendChild(newIframe);
-    return newIframe;
-  }
+    exitFullscreenTopBtn.addEventListener('click', () => {
+      outputContainer.style.position = 'relative';
+      outputContainer.style.width = '100%';
+      outputContainer.style.height = '300px';
+      outputContainer.style.zIndex = '1';
+      fullscreenBtn.classList.remove('hidden');
+      fullscreenBar.style.display = 'none';
+    });
 
-  function runCode() {
-    const code = codeEditor.value;
-    const outputFrame = resetIframe();
-    const frameDoc = outputFrame.contentWindow.document;
-    frameDoc.open();
-    frameDoc.write(code);
-    frameDoc.close();
-  }
-
-  function saveCode(slot) {
-    localStorage.setItem(`html_code_slot_${slot}`, codeEditor.value);
-    alert(`スロット${slot}にコードを保存しました！`);
-  }
-
-  function loadCode(slot) {
-    const savedCode = localStorage.getItem(`html_code_slot_${slot}`);
-    if (savedCode) {
-      codeEditor.value = savedCode;
-      alert(`スロット${slot}のコードを呼び出しました。`);
-    } else {
-      alert(`スロット${slot}には保存されたコードがありません。`);
-    }
-  }
-
-  function resetCode() {
-    codeEditor.value = '';
-    resetIframe();
-    alert('入力欄とプレビューをリセットしました。');
-  }
-
-  // 初期化時にスロット1のコードを読み込む
-  loadCode(1);
-</script>
+    toggleEditorBtn.addEventListener('click', () => {
+      if (editorVisible) {
+        editorContainer.style.height = '0';
+        toggleEditorBtn.textContent = 'エディタを表示';
+      } else {
+        editorContainer.style.height = '300px';
+        toggleEditorBtn.textContent = 'エディタを隠す';
+      }
+      editorVisible = !editorVisible;
+    });
+  </script>
 
 </body>
 </html>
