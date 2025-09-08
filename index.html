@@ -260,7 +260,7 @@
     function saveCode(slot) {
       const code = codeEditor.value;
       const titleMatch = code.match(/<title>(.*?)<\/title>/);
-      const title = titleMatch ? titleMatch[1] : 'タイトルなし';
+      const title = titleMatch && titleMatch[1] ? titleMatch[1] : 'タイトルなし';
       
       const data = {
         code: code,
@@ -276,7 +276,7 @@
       if (saved) {
         const data = JSON.parse(saved);
         codeEditor.value = data.code;
-        runCode();
+        runCode(); // ここでプレビューを自動更新
         alert(`スロット${slot}を読み込みました！\nタイトル: ${data.title}`);
       } else {
         alert(`スロット${slot}には保存されたコードがありません。`);
@@ -285,7 +285,6 @@
 
     // 初期ロード
     loadCode(1);
-    runCode();
   </script>
 
 </body>
