@@ -1,119 +1,195 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Code Saver & Runner</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; background-color: #f0f0f0; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #333; }
-        textarea { width: 100%; height: 250px; border: 1px solid #ccc; border-radius: 4px; padding: 10px; font-family: monospace; }
-        .controls { display: flex; justify-content: space-around; margin-top: 10px; flex-wrap: wrap; gap: 10px; }
-        button { padding: 10px 20px; font-size: 16px; cursor: pointer; border: none; border-radius: 5px; color: white; }
-        #saveBtn1, #saveBtn2, #saveBtn3 { background-color: #4CAF50; }
-        #loadBtn1, #loadBtn2, #loadBtn3 { background-color: #2196F3; }
-        #runBtn { background-color: #f44336; }
-        #resetBtn { background-color: #555; }
-        .output-container { width: 100%; height: 300px; border: 1px solid #ccc; margin-top: 20px; overflow: hidden; position: relative; }
-        #outputFrame { width: 100%; height: 100%; border: none; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code Saver & Runner</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      background-color: #f0f0f0;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    textarea {
+      width: 100%;
+      height: 250px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 10px;
+      font-family: monospace;
+    }
+    .controls {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 10px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      color: white;
+    }
+    #saveBtn1, #saveBtn2, #saveBtn3 {
+      background-color: #4CAF50;
+    }
+    #loadBtn1, #loadBtn2, #loadBtn3 {
+      background-color: #2196F3;
+    }
+    #runBtn {
+      background-color: #f44336;
+    }
+    #resetBtn {
+      background-color: #555;
+    }
+    #fullscreenBtn, #exitFullscreenBtn {
+      background-color: #ff9800;
+    }
+    .output-container {
+      width: 100%;
+      height: 300px;
+      border: 1px solid #ccc;
+      margin-top: 20px;
+      overflow: hidden;
+      position: relative;
+      transition: all 0.3s ease;
+      z-index: 1;
+      background-color: white;
+    }
+    #outputFrame {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>HTML Code Runner</h1>
-    <p>ここにHTMLコードを入力してください。保存・呼び出しが可能です。</p>
-    <textarea id="codeEditor"></textarea>
+  <h1>HTML Code Runner</h1>
+  <p>ここにHTMLコードを入力してください。保存・呼び出し・実行・リセット・フルスクリーン切り替えが可能です。</p>
+  <textarea id="codeEditor"></textarea>
 
-    <div class="controls">
-        <div style="display: flex; gap: 10px;">
-            <button id="saveBtn1">スロット1に保存</button>
-            <button id="loadBtn1">スロット1を呼び出し</button>
-        </div>
-        <div style="display: flex; gap: 10px;">
-            <button id="saveBtn2">スロット2に保存</button>
-            <button id="loadBtn2">スロット2を呼び出し</button>
-        </div>
-        <div style="display: flex; gap: 10px;">
-            <button id="saveBtn3">スロット3に保存</button>
-            <button id="loadBtn3">スロット3を呼び出し</button>
-        </div>
-        <button id="runBtn">実行</button>
-        <button id="resetBtn">リセット</button>
+  <div class="controls">
+    <div style="display: flex; gap: 10px;">
+      <button id="saveBtn1">スロット1に保存</button>
+      <button id="loadBtn1">スロット1を呼び出し</button>
     </div>
+    <div style="display: flex; gap: 10px;">
+      <button id="saveBtn2">スロット2に保存</button>
+      <button id="loadBtn2">スロット2を呼び出し</button>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <button id="saveBtn3">スロット3に保存</button>
+      <button id="loadBtn3">スロット3を呼び出し</button>
+    </div>
+    <button id="runBtn">実行</button>
+    <button id="resetBtn">リセット</button>
+    <button id="fullscreenBtn">フルスクリーン表示</button>
+    <button id="exitFullscreenBtn" style="display: none;">元に戻す</button>
+  </div>
 
-    <h3>出力プレビュー</h3>
-    <div class="output-container" id="outputContainer">
-        <iframe id="outputFrame"></iframe>
-    </div>
+  <h3>出力プレビュー</h3>
+  <div class="output-container" id="outputContainer">
+    <iframe id="outputFrame"></iframe>
+  </div>
 </div>
 
 <script>
-    const codeEditor = document.getElementById('codeEditor');
-    const runBtn = document.getElementById('runBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    
-    document.getElementById('saveBtn1').addEventListener('click', () => saveCode(1));
-    document.getElementById('loadBtn1').addEventListener('click', () => loadCode(1));
-    document.getElementById('saveBtn2').addEventListener('click', () => saveCode(2));
-    document.getElementById('loadBtn2').addEventListener('click', () => loadCode(2));
-    document.getElementById('saveBtn3').addEventListener('click', () => saveCode(3));
-    document.getElementById('loadBtn3').addEventListener('click', () => loadCode(3));
-    runBtn.addEventListener('click', runCode);
-    resetBtn.addEventListener('click', resetCode);
+  const codeEditor = document.getElementById('codeEditor');
+  const runBtn = document.getElementById('runBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const fullscreenBtn = document.getElementById('fullscreenBtn');
+  const exitFullscreenBtn = document.getElementById('exitFullscreenBtn');
+  const outputContainer = document.getElementById('outputContainer');
 
-    // プレビュー画面のDOMを完全にリセットする関数
-    function resetIframe() {
-        const outputContainer = document.getElementById('outputContainer');
-        const oldIframe = document.getElementById('outputFrame');
+  document.getElementById('saveBtn1').addEventListener('click', () => saveCode(1));
+  document.getElementById('loadBtn1').addEventListener('click', () => loadCode(1));
+  document.getElementById('saveBtn2').addEventListener('click', () => saveCode(2));
+  document.getElementById('loadBtn2').addEventListener('click', () => loadCode(2));
+  document.getElementById('saveBtn3').addEventListener('click', () => saveCode(3));
+  document.getElementById('loadBtn3').addEventListener('click', () => loadCode(3));
+  runBtn.addEventListener('click', runCode);
+  resetBtn.addEventListener('click', resetCode);
 
-        // 古いiframeを完全に削除
-        if (oldIframe) {
-            outputContainer.removeChild(oldIframe);
-        }
+  fullscreenBtn.addEventListener('click', () => {
+    outputContainer.style.position = 'fixed';
+    outputContainer.style.top = '0';
+    outputContainer.style.left = '0';
+    outputContainer.style.width = '100vw';
+    outputContainer.style.height = '100vh';
+    outputContainer.style.zIndex = '9999';
+    fullscreenBtn.style.display = 'none';
+    exitFullscreenBtn.style.display = 'inline-block';
+  });
 
-        // 新しいiframeを作成して挿入
-        const newIframe = document.createElement('iframe');
-        newIframe.id = 'outputFrame';
-        outputContainer.appendChild(newIframe);
-        return newIframe;
+  exitFullscreenBtn.addEventListener('click', () => {
+    outputContainer.style.position = 'relative';
+    outputContainer.style.width = '100%';
+    outputContainer.style.height = '300px';
+    outputContainer.style.zIndex = '1';
+    fullscreenBtn.style.display = 'inline-block';
+    exitFullscreenBtn.style.display = 'none';
+  });
+
+  function resetIframe() {
+    const oldIframe = document.getElementById('outputFrame');
+    if (oldIframe) {
+      outputContainer.removeChild(oldIframe);
     }
+    const newIframe = document.createElement('iframe');
+    newIframe.id = 'outputFrame';
+    outputContainer.appendChild(newIframe);
+    return newIframe;
+  }
 
-    function runCode() {
-        const code = codeEditor.value;
-        const outputFrame = resetIframe(); // 新しいiframeを生成
-        const frameDoc = outputFrame.contentWindow.document;
+  function runCode() {
+    const code = codeEditor.value;
+    const outputFrame = resetIframe();
+    const frameDoc = outputFrame.contentWindow.document;
+    frameDoc.open();
+    frameDoc.write(code);
+    frameDoc.close();
+  }
 
-        // 新しいiframeにコードを書き込む
-        frameDoc.open();
-        frameDoc.write(code);
-        frameDoc.close();
+  function saveCode(slot) {
+    localStorage.setItem(`html_code_slot_${slot}`, codeEditor.value);
+    alert(`スロット${slot}にコードを保存しました！`);
+  }
+
+  function loadCode(slot) {
+    const savedCode = localStorage.getItem(`html_code_slot_${slot}`);
+    if (savedCode) {
+      codeEditor.value = savedCode;
+      alert(`スロット${slot}のコードを呼び出しました。`);
+    } else {
+      alert(`スロット${slot}には保存されたコードがありません。`);
     }
+  }
 
-    function saveCode(slot) {
-        localStorage.setItem(`html_code_slot_${slot}`, codeEditor.value);
-        alert(`スロット${slot}にコードを保存しました！`);
-    }
+  function resetCode() {
+    codeEditor.value = '';
+    resetIframe();
+    alert('入力欄とプレビューをリセットしました。');
+  }
 
-    function loadCode(slot) {
-        const savedCode = localStorage.getItem(`html_code_slot_${slot}`);
-        if (savedCode) {
-            codeEditor.value = savedCode;
-            alert(`スロット${slot}のコードを呼び出しました。`);
-        } else {
-            alert(`スロット${slot}には保存されたコードがありません。`);
-        }
-    }
-
-    function resetCode() {
-        codeEditor.value = '';
-        resetIframe(); // iframeもリセット
-        alert('入力欄とプレビューをリセットしました。');
-    }
-
-    // 初期化時にスロット1のコードを読み込む
-    loadCode(1);
+  // 初期化時にスロット1のコードを読み込む
+  loadCode(1);
 </script>
 
 </body>
