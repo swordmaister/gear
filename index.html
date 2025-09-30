@@ -1,118 +1,584 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <title>コードランナー</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3Dライフゲーム</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
       margin: 0;
-      padding: 0;
-      background: #f4f4f4;
+      overflow: hidden;
+      background: radial-gradient(ellipse at center, #1a1a2e 0%, #16213e 100%);
+      font-family: 'Arial', sans-serif;
+      color: white;
     }
-    header {
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+    }
+    #settings {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 20px;
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      z-index: 100;
+      min-width: 250px;
+    }
+    #settings.open {
+      transform: translateX(0);
+    }
+    #settingsToggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 170, 255, 0.9);
+      border: none;
+      padding: 12px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      color: white;
+      font-size: 18px;
+      transition: all 0.2s ease;
+      z-index: 101;
+    }
+    #settingsToggle:hover {
+      background: rgba(0, 170, 255, 1);
+      transform: scale(1.05);
+    }
+    #mainControls {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 15px;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 15px 25px;
+      border-radius: 25px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    #info {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 15px 20px;
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      color: white;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+    .btn:active {
+      transform: translateY(0);
+    }
+    .btn.active {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    .control-group {
+      margin-bottom: 20px;
+    }
+    .control-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 13px;
+      color: #ccc;
+    }
+    input[type="range"] {
+      width: 100%;
+      -webkit-appearance: none;
+      height: 6px;
+      border-radius: 3px;
+      background: #333;
+      outline: none;
+      margin: 8px 0;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+    input[type="number"] {
+      width: 60px;
+      padding: 6px;
+      border: 1px solid #555;
+      border-radius: 4px;
       background: #333;
       color: white;
-      padding: 1em;
-      text-align: center;
+      font-size: 12px;
     }
-    #editor {
-      width: 100%;
-      height: 200px;
-      padding: 1em;
-      font-family: monospace;
-      font-size: 14px;
-      border: none;
-      resize: vertical;
+    .value-display {
+      color: #00aaff;
+      font-weight: bold;
     }
-    #controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5em;
-      padding: 1em;
-      background: #eee;
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
     }
-    button {
-      padding: 0.5em 1em;
-      border: none;
-      background: #444;
-      color: white;
-      cursor: pointer;
-      border-radius: 4px;
-    }
-    button:hover {
-      background: #666;
-    }
-    select {
-      padding: 0.5em;
-      border-radius: 4px;
-    }
-    iframe {
-      width: 100%;
-      height: 300px;
-      border: none;
-      background: white;
+    .playing {
+      animation: pulse 1s infinite;
     }
   </style>
 </head>
 <body>
-  <header>🎬 コード演出ランナー</header>
-  <textarea id="editor" placeholder="ここにHTML/JSコードを入力してください"></textarea>
-  <div id="controls">
-    <button onclick="runCode()">▶ 実行</button>
-    <button onclick="resetCode()">🔄 リセット</button>
-    <button onclick="toggleFullscreen()">⛶ フルスクリーン</button>
-    <select id="slotSelector">
-      <option value="slot1">保存スロット1</option>
-      <option value="slot2">保存スロット2</option>
-      <option value="slot3">保存スロット3</option>
-    </select>
-    <button onclick="saveCode()">💾 保存</button>
-    <button onclick="loadCode()">📂 読み込み</button>
+  <div id="info">
+    <div>ターン: <span id="turnCount">0</span></div>
+    <div>生存セル: <span id="aliveCount">0</span></div>
+    <div>密度: <span id="density">0</span>%</div>
   </div>
-  <iframe id="preview"></iframe>
+
+  <button id="settingsToggle">⚙️</button>
+
+  <div id="settings">
+    <h3 style="margin-top: 0; color: #00aaff;">ゲーム設定</h3>
+    <div class="control-group">
+      <label>グリッドサイズ: <span class="value-display" id="gridSizeValue">10</span></label>
+      <input type="range" id="gridSize" min="6" max="16" value="10">
+    </div>
+    <div class="control-group">
+      <label>初期密度: <span class="value-display" id="densityValue">15</span>%</label>
+      <input type="range" id="initialDensity" min="5" max="40" value="15">
+    </div>
+    <div class="control-group">
+      <label>生存ルール (隣接数): <input type="number" id="surviveMin" min="1" max="10" value="4"> - <input type="number" id="surviveMax" min="1" max="15" value="5"></label>
+    </div>
+    <div class="control-group">
+      <label>誕生ルール (隣接数): <input type="number" id="birthRule" min="1" max="15" value="5"></label>
+    </div>
+    <div class="control-group">
+      <label>自動再生速度: <span class="value-display" id="speedValue">800</span>ms</label>
+      <input type="range" id="speed" min="100" max="2000" value="800">
+    </div>
+    <div class="control-group">
+      <button class="btn" id="applySettings">設定を適用</button>
+    </div>
+    <div class="control-group">
+      <label>パターン生成:</label>
+      <button class="btn" id="randomPattern" style="width: 100%; margin-bottom: 8px;">ランダム</button>
+      <button class="btn" id="clusterPattern" style="width: 100%; margin-bottom: 8px;">クラスター</button>
+      <button class="btn" id="spherePattern" style="width: 100%;">球体</button>
+    </div>
+  </div>
+
+  <div id="mainControls">
+    <button class="btn" id="stepBtn">▶️ 次世代</button>
+    <button class="btn" id="playBtn">⏯️ 自動再生</button>
+    <button class="btn" id="resetBtn">🔄 リセット</button>
+    <button class="btn" id="rotateBtn">🔄 回転</button>
+  </div>
 
   <script>
-    const editor = document.getElementById('editor');
-    const preview = document.getElementById('preview');
-    const slotSelector = document.getElementById('slotSelector');
+    // ゲーム設定
+    let config = {
+      gridSize: 10,
+      initialDensity: 0.15,
+      surviveMin: 4,
+      surviveMax: 5,
+      birthRule: 5,
+      speed: 800
+    };
 
-    function runCode() {
-      const code = editor.value;
-      const blob = new Blob([code], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-      preview.src = url;
+    // Three.jsの基本設定
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0x000000, 50, 200);
+    
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x000000, 0);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
+
+    // カメラ設定
+    camera.position.set(30, 30, 30);
+    camera.lookAt(0, 0, 0);
+
+    // マウスコントロール（簡易版）
+    let mouseX = 0, mouseY = 0;
+    let targetRotationX = 0, targetRotationY = 0;
+    let isMouseDown = false;
+    let rotationDampening = 0.95;
+
+    document.addEventListener('mousedown', () => isMouseDown = true);
+    document.addEventListener('mouseup', () => isMouseDown = false);
+    document.addEventListener('mousemove', (event) => {
+      if (isMouseDown) {
+        mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+        mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+        targetRotationY = mouseX * Math.PI;
+        targetRotationX = mouseY * Math.PI * 0.5;
+      }
+    });
+
+    // ゲーム状態
+    let cells = [];
+    let cellGroup = new THREE.Group();
+    scene.add(cellGroup);
+    let turn = 0;
+    let isPlaying = false;
+    let isRotating = false;
+    let lastTime = 0;
+
+    // ライティング
+    const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+    scene.add(ambientLight);
+    
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(50, 100, 50);
+    directionalLight.castShadow = true;
+    directionalLight.shadow.mapSize.width = 2048;
+    directionalLight.shadow.mapSize.height = 2048;
+    scene.add(directionalLight);
+
+    const pointLight = new THREE.PointLight(0x00aaff, 0.8, 100);
+    pointLight.position.set(-30, 30, -30);
+    scene.add(pointLight);
+
+    // セルのマテリアルとジオメトリ
+    const cellGeometry = new THREE.BoxGeometry(1, 1, 1);
+    const cellMaterial = new THREE.MeshLambertMaterial({ 
+      color: 0x00ff88,
+      transparent: true,
+      opacity: 0.9
+    });
+
+    // 初期化
+    function initializeGrid() {
+      scene.remove(cellGroup);
+      cellGroup = new THREE.Group();
+      scene.add(cellGroup);
+      
+      cells = [];
+      turn = 0;
+      updateDisplay();
+
+      // グリッド初期化
+      for (let x = 0; x < config.gridSize; x++) {
+        cells[x] = [];
+        for (let y = 0; y < config.gridSize; y++) {
+          cells[x][y] = new Array(config.gridSize).fill(null).map(() => ({ alive: false }));
+        }
+      }
+
+      generateRandomPattern();
+      renderCells();
     }
 
-    function resetCode() {
-      editor.value = '';
-      preview.src = 'about:blank';
+    // ランダムパターン生成
+    function generateRandomPattern() {
+      clearCells();
+      const totalCells = config.gridSize ** 3;
+      const targetCount = Math.floor(totalCells * config.initialDensity);
+      let count = 0;
+
+      while (count < targetCount) {
+        const x = Math.floor(Math.random() * config.gridSize);
+        const y = Math.floor(Math.random() * config.gridSize);
+        const z = Math.floor(Math.random() * config.gridSize);
+        
+        if (!cells[x][y][z].alive) {
+          cells[x][y][z].alive = true;
+          count++;
+        }
+      }
+      renderCells();
     }
 
-    function toggleFullscreen() {
-      if (!document.fullscreenElement) {
-        preview.requestFullscreen();
-      } else {
-        document.exitFullscreen();
+    // クラスターパターン生成
+    function generateClusterPattern() {
+      clearCells();
+      const clusterCount = Math.floor(config.gridSize / 3);
+      
+      for (let i = 0; i < clusterCount; i++) {
+        const centerX = Math.floor(Math.random() * config.gridSize);
+        const centerY = Math.floor(Math.random() * config.gridSize);
+        const centerZ = Math.floor(Math.random() * config.gridSize);
+        const radius = Math.random() * 3 + 1;
+        
+        for (let x = 0; x < config.gridSize; x++) {
+          for (let y = 0; y < config.gridSize; y++) {
+            for (let z = 0; z < config.gridSize; z++) {
+              const distance = Math.sqrt(
+                (x - centerX) ** 2 + (y - centerY) ** 2 + (z - centerZ) ** 2
+              );
+              if (distance <= radius && Math.random() < 0.7) {
+                cells[x][y][z].alive = true;
+              }
+            }
+          }
+        }
+      }
+      renderCells();
+    }
+
+    // 球体パターン生成
+    function generateSpherePattern() {
+      clearCells();
+      const center = config.gridSize / 2;
+      const radius = config.gridSize * 0.3;
+      
+      for (let x = 0; x < config.gridSize; x++) {
+        for (let y = 0; y < config.gridSize; y++) {
+          for (let z = 0; z < config.gridSize; z++) {
+            const distance = Math.sqrt(
+              (x - center) ** 2 + (y - center) ** 2 + (z - center) ** 2
+            );
+            if (distance <= radius && Math.random() < 0.5) {
+              cells[x][y][z].alive = true;
+            }
+          }
+        }
+      }
+      renderCells();
+    }
+
+    function clearCells() {
+      for (let x = 0; x < config.gridSize; x++) {
+        for (let y = 0; y < config.gridSize; y++) {
+          for (let z = 0; z < config.gridSize; z++) {
+            cells[x][y][z].alive = false;
+          }
+        }
       }
     }
 
-    function saveCode() {
-      const slot = slotSelector.value;
-      localStorage.setItem(slot, editor.value);
-      alert(`保存しました：${slot}`);
+    // セル描画
+    function renderCells() {
+      cellGroup.clear();
+      let aliveCount = 0;
+      
+      const offset = config.gridSize / 2 - 0.5;
+      for (let x = 0; x < config.gridSize; x++) {
+        for (let y = 0; y < config.gridSize; y++) {
+          for (let z = 0; z < config.gridSize; z++) {
+            if (cells[x][y][z].alive) {
+              const cube = new THREE.Mesh(cellGeometry, cellMaterial.clone());
+              cube.position.set(
+                (x - offset) * 1.2,
+                (y - offset) * 1.2,
+                (z - offset) * 1.2
+              );
+              
+              const hue = (x + y + z) / (config.gridSize * 3);
+              cube.material.color.setHSL(hue * 0.3 + 0.3, 0.8, 0.6);
+              
+              cube.castShadow = true;
+              cube.receiveShadow = true;
+              cellGroup.add(cube);
+              aliveCount++;
+            }
+          }
+        }
+      }
+      updateDisplay(aliveCount);
     }
 
-    function loadCode() {
-      const slot = slotSelector.value;
-      const code = localStorage.getItem(slot);
-      if (code !== null) {
-        editor.value = code;
-        alert(`読み込み完了：${slot}`);
-      } else {
-        alert(`保存されていません：${slot}`);
+    // 近傍セルカウント
+    function countNeighbors(x, y, z) {
+      let count = 0;
+      for (let dx = -1; dx <= 1; dx++) {
+        for (let dy = -1; dy <= 1; dy++) {
+          for (let dz = -1; dz <= 1; dz++) {
+            if (dx === 0 && dy === 0 && dz === 0) continue;
+            const nx = x + dx, ny = y + dy, nz = z + dz;
+            if (nx >= 0 && nx < config.gridSize && 
+                ny >= 0 && ny < config.gridSize && 
+                nz >= 0 && nz < config.gridSize && 
+                cells[nx][ny][nz].alive) {
+              count++;
+            }
+          }
+        }
+      }
+      return count;
+    }
+
+    // ライフゲーム更新
+    function updateLifeGame() {
+      const nextState = [];
+      for (let x = 0; x < config.gridSize; x++) {
+        nextState[x] = [];
+        for (let y = 0; y < config.gridSize; y++) {
+          nextState[x][y] = new Array(config.gridSize).fill(null).map(() => ({ alive: false }));
+          for (let z = 0; z < config.gridSize; z++) {
+            const alive = cells[x][y][z].alive;
+            const neighbors = countNeighbors(x, y, z);
+            
+            let nextAlive = false;
+            if (alive) {
+              nextAlive = neighbors >= config.surviveMin && neighbors <= config.surviveMax;
+            } else {
+              nextAlive = neighbors === config.birthRule;
+            }
+            
+            nextState[x][y][z] = { alive: nextAlive };
+          }
+        }
+      }
+      
+      cells = nextState;
+      turn++;
+      renderCells();
+    }
+
+    // 表示更新
+    function updateDisplay(aliveCount = null) {
+      document.getElementById('turnCount').textContent = turn;
+      if (aliveCount !== null) {
+        document.getElementById('aliveCount').textContent = aliveCount;
+        const totalCells = config.gridSize ** 3;
+        const density = Math.round((aliveCount / totalCells) * 100);
+        document.getElementById('density').textContent = density;
       }
     }
+
+    // UI設定更新
+    function updateSettingsDisplay() {
+      document.getElementById('gridSizeValue').textContent = config.gridSize;
+      document.getElementById('densityValue').textContent = Math.round(config.initialDensity * 100);
+      document.getElementById('speedValue').textContent = config.speed;
+      
+      document.getElementById('gridSize').value = config.gridSize;
+      document.getElementById('initialDensity').value = Math.round(config.initialDensity * 100);
+      document.getElementById('speed').value = config.speed;
+      document.getElementById('surviveMin').value = config.surviveMin;
+      document.getElementById('surviveMax').value = config.surviveMax;
+      document.getElementById('birthRule').value = config.birthRule;
+    }
+
+    // イベントリスナー
+    document.getElementById('settingsToggle').onclick = () => {
+      const settings = document.getElementById('settings');
+      settings.classList.toggle('open');
+      if (settings.classList.contains('open')) {
+        updateSettingsDisplay();
+      }
+    };
+
+    document.getElementById('gridSize').oninput = (e) => {
+      document.getElementById('gridSizeValue').textContent = e.target.value;
+    };
+
+    document.getElementById('initialDensity').oninput = (e) => {
+      document.getElementById('densityValue').textContent = e.target.value;
+    };
+
+    document.getElementById('speed').oninput = (e) => {
+      document.getElementById('speedValue').textContent = e.target.value;
+      config.speed = parseInt(e.target.value);
+    };
+
+    document.getElementById('applySettings').onclick = () => {
+      config.gridSize = parseInt(document.getElementById('gridSize').value);
+      config.initialDensity = parseInt(document.getElementById('initialDensity').value) / 100;
+      config.speed = parseInt(document.getElementById('speed').value);
+      config.surviveMin = parseInt(document.getElementById('surviveMin').value);
+      config.surviveMax = parseInt(document.getElementById('surviveMax').value);
+      config.birthRule = parseInt(document.getElementById('birthRule').value);
+      
+      initializeGrid();
+      document.getElementById('settings').classList.remove('open');
+    };
+
+    document.getElementById('stepBtn').onclick = () => updateLifeGame();
+    
+    document.getElementById('playBtn').onclick = () => {
+      isPlaying = !isPlaying;
+      const btn = document.getElementById('playBtn');
+      btn.classList.toggle('active', isPlaying);
+      btn.classList.toggle('playing', isPlaying);
+      btn.innerHTML = isPlaying ? '⏸️ 停止' : '⏯️ 自動再生';
+    };
+
+    document.getElementById('resetBtn').onclick = () => {
+      isPlaying = false;
+      const playBtn = document.getElementById('playBtn');
+      playBtn.classList.remove('active', 'playing');
+      playBtn.innerHTML = '⏯️ 自動再生';
+      initializeGrid();
+    };
+    
+    document.getElementById('rotateBtn').onclick = () => {
+      isRotating = !isRotating;
+      const btn = document.getElementById('rotateBtn');
+      btn.classList.toggle('active', isRotating);
+      btn.innerHTML = isRotating ? '⏹️ 回転停止' : '🔄 回転';
+    };
+
+    document.getElementById('randomPattern').onclick = () => {
+      generateRandomPattern();
+      updateDisplay();
+    };
+    document.getElementById('clusterPattern').onclick = () => {
+      generateClusterPattern();
+      updateDisplay();
+    };
+    document.getElementById('spherePattern').onclick = () => {
+      generateSpherePattern();
+      updateDisplay();
+    };
+
+    // リサイズ処理
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // アニメーションループ
+    function animate(time) {
+      requestAnimationFrame(animate);
+      
+      if (isRotating) {
+        cellGroup.rotation.y += 0.005;
+        cellGroup.rotation.x += 0.0025;
+      } else {
+        cellGroup.rotation.y += (targetRotationY - cellGroup.rotation.y) * 0.05;
+        cellGroup.rotation.x += (targetRotationX - cellGroup.rotation.x) * 0.05;
+      }
+      
+      if (isPlaying && time - lastTime > config.speed) {
+        updateLifeGame();
+        lastTime = time;
+      }
+      
+      renderer.render(scene, camera);
+    }
+
+    // 初期化
+    initializeGrid();
+    updateSettingsDisplay();
+    animate(0);
   </script>
 </body>
 </html>
